@@ -24,7 +24,7 @@ impl Plugin for GamePlugin {
             .add_plugin(PlayerPlugin)
             .add_plugin(ActionsPlugin)
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup));
-        // From here must be added into plugins
+
         // DEBUG STUFF
         //.add_plugin(LogDiagnosticsPlugin::default())
         //.add_plugin(FrameTimeDiagnosticsPlugin::default())

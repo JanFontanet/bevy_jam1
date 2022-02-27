@@ -1,6 +1,6 @@
 use crate::direction::Direction;
 use crate::game::GameState;
-use crate::player::{MovementEvent, Player, ShootEvent};
+use crate::player::Player;
 use crate::utils::*;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
@@ -9,7 +9,9 @@ pub struct ActionsPlugin;
 
 impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<ActionsMap>()
+        app.add_event::<MovementEvent>()
+            .add_event::<ShootEvent>()
+            .init_resource::<ActionsMap>()
             .add_plugin(InputManagerPlugin::<Actions>::default())
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
@@ -17,6 +19,14 @@ impl Plugin for ActionsPlugin {
                     .with_system(handle_shoot_input.label("input")),
             );
     }
+}
+
+pub struct MovementEvent {
+    pub direction: Direction,
+}
+
+pub struct ShootEvent {
+    pub direction: Vec2,
 }
 
 pub struct ActionsMap {
@@ -40,6 +50,7 @@ pub enum Actions {
     Right,
     // Abilities
     Shoot,
+    Dash,
 }
 
 impl Actions {

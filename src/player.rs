@@ -1,6 +1,5 @@
 // mod direction;
-use crate::actions::{Actions, ActionsMap};
-use crate::direction::Direction;
+use crate::actions::{Actions, ActionsMap, MovementEvent, ShootEvent};
 use crate::game::GameState;
 use crate::utils::*;
 use bevy::prelude::*;
@@ -12,9 +11,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<MovementEvent>()
-            .add_event::<ShootEvent>()
-            .add_plugin(ShapePlugin)
+        app.add_plugin(ShapePlugin)
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_player))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
@@ -35,14 +32,6 @@ pub struct PlayerBundle {
     pub shape: ShapeBundle,
     #[bundle]
     pub input_manager: InputManagerBundle<Actions>,
-}
-
-pub struct MovementEvent {
-    pub direction: Direction,
-}
-
-pub struct ShootEvent {
-    pub direction: Vec2,
 }
 
 fn spawn_player(mut commands: Commands, actions_map: Res<ActionsMap>) {
@@ -76,7 +65,6 @@ fn cursor_system(windows: Res<Windows>, mut q_player: Query<&mut Transform, With
     if let Some(direction) = get_direction_between_transform_and_cursor(window, &player_transform) {
         let angle = direction.angle_between(Vec2::new(0., 1.));
 
-        // let angle = p.angle_between(Vec2::new(0., 1.));
         player_transform.rotation = Quat::from_rotation_z(-angle);
     }
 }
