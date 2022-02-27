@@ -16,7 +16,7 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0., 0.1, 0.3)))
         .insert_resource(WindowDescriptor {
             title: "Shooting Cubes".to_string(), // ToDo
-            mode: WindowMode::BorderlessFullscreen,
+            mode: WindowMode::Windowed,
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
