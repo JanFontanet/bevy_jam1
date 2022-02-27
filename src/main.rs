@@ -1,5 +1,6 @@
 mod actions;
 mod bullet;
+mod collide;
 mod direction;
 mod game;
 mod loading;

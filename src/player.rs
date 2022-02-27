@@ -1,5 +1,6 @@
 use crate::actions::{Actions, ActionsMap, MovementEvent, ShootEvent};
 use crate::bullet::create_bullet_bundle;
+use crate::collide::{Collideable, Collider, DetectLeave, EntityLeaveWindow};
 use crate::game::GameState;
 use crate::utils::*;
 use bevy::prelude::*;
@@ -20,7 +21,8 @@ impl Plugin for PlayerPlugin {
                 SystemSet::on_update(GameState::Playing)
                     .with_system(cursor_system)
                     .with_system(handle_movement_events.after("input").label("movement"))
-                    .with_system(handle_shoot_events.after("input").label("action")),
+                    .with_system(handle_shoot_events.after("input").label("action"))
+                    .with_system(handle_player_leave_window_events.after("movement")),
             );
     }
 }
@@ -44,24 +46,27 @@ fn spawn_player(mut commands: Commands, actions_map: Res<ActionsMap>) {
         ..shapes::RegularPolygon::default()
     };
 
-    commands.spawn_bundle(PlayerBundle {
-        player: Player,
-        shape: GeometryBuilder::build_as(
-            &shape,
-            DrawMode::Outlined {
-                fill_mode: FillMode::color(Color::PURPLE),
-                outline_mode: StrokeMode::new(Color::BLACK, 0.0),
+    commands
+        .spawn_bundle(PlayerBundle {
+            player: Player,
+            shape: GeometryBuilder::build_as(
+                &shape,
+                DrawMode::Outlined {
+                    fill_mode: FillMode::color(Color::PURPLE),
+                    outline_mode: StrokeMode::new(Color::BLACK, 0.0),
+                },
+                Transform {
+                    translation: Vec3::new(0.0, 0.0, 10.0),
+                    ..Default::default()
+                },
+            ),
+            input_manager: InputManagerBundle {
+                action_state: ActionState::default(),
+                input_map: actions_map.input_map.clone(),
             },
-            Transform {
-                translation: Vec3::new(0.0, 0.0, 10.0),
-                ..Default::default()
-            },
-        ),
-        input_manager: InputManagerBundle {
-            action_state: ActionState::default(),
-            input_map: actions_map.input_map.clone(),
-        },
-    });
+        })
+        .insert(Collideable { radius: 20.0 })
+        .insert(DetectLeave);
 }
 
 fn cursor_system(windows: Res<Windows>, mut q_player: Query<&mut Transform, With<Player>>) {
@@ -93,10 +98,25 @@ fn handle_shoot_events(
     bullet_transform.translation.z -= 1.;
 
     for event in events.iter() {
-        commands.spawn_bundle(create_bullet_bundle(
-            bullet_transform,
-            event.angle,
-            BULLET_SPEED,
-        ));
+        commands
+            .spawn_bundle(create_bullet_bundle(
+                bullet_transform,
+                event.angle,
+                BULLET_SPEED,
+            ))
+            .insert(Collider { radius: 8.0 });
+    }
+}
+
+fn handle_player_leave_window_events(
+    mut events: EventReader<EntityLeaveWindow>,
+    mut q_player: Query<(Entity, &mut Transform), With<Player>>,
+) {
+    let (entity, mut player_transform) = q_player.single_mut();
+    for event in events.iter() {
+        if event.entity == entity {
+            player_transform.translation.x = event.last_x;
+            player_transform.translation.y = event.last_y;
+        }
     }
 }

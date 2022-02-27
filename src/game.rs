@@ -1,5 +1,6 @@
 use crate::actions::*;
 use crate::bullet::*;
+use crate::collide::CollidePlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::*;
@@ -27,6 +28,7 @@ impl Plugin for GamePlugin {
             .add_plugin(PlayerPlugin)
             .add_plugin(ActionsPlugin)
             .add_plugin(BulletPlugin)
+            .add_plugin(CollidePlugin)
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup));
 
         // DEBUG STUFF
