@@ -1,18 +1,21 @@
-// mod direction;
 use crate::actions::{Actions, ActionsMap, MovementEvent, ShootEvent};
+use crate::bullet::create_bullet_bundle;
 use crate::game::GameState;
 use crate::utils::*;
 use bevy::prelude::*;
 use bevy_prototype_lyon::entity::ShapeBundle;
 use bevy_prototype_lyon::prelude::*;
 use leafwing_input_manager::prelude::*;
+use std::f32::consts::PI;
+
+const PLAYER_BASE_ANGLE: f32 = -PI / 2.0;
+const BULLET_SPEED: f32 = 20.0;
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(ShapePlugin)
-            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_player))
+        app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_player))
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(cursor_system)
@@ -49,7 +52,10 @@ fn spawn_player(mut commands: Commands, actions_map: Res<ActionsMap>) {
                 fill_mode: FillMode::color(Color::PURPLE),
                 outline_mode: StrokeMode::new(Color::BLACK, 0.0),
             },
-            Transform::default(),
+            Transform {
+                translation: Vec3::new(0.0, 0.0, 10.0),
+                ..Default::default()
+            },
         ),
         input_manager: InputManagerBundle {
             action_state: ActionState::default(),
@@ -62,10 +68,8 @@ fn cursor_system(windows: Res<Windows>, mut q_player: Query<&mut Transform, With
     let window = windows.get_primary().unwrap();
     let mut player_transform = q_player.single_mut();
 
-    if let Some(direction) = get_direction_between_transform_and_cursor(window, &player_transform) {
-        let angle = direction.angle_between(Vec2::new(0., 1.));
-
-        player_transform.rotation = Quat::from_rotation_z(-angle);
+    if let Some(angle) = get_angle_between_transform_and_cursor(window, &player_transform) {
+        player_transform.rotation = Quat::from_rotation_z(angle + PLAYER_BASE_ANGLE);
     }
 }
 
@@ -82,10 +86,17 @@ fn handle_movement_events(
 fn handle_shoot_events(
     mut commands: Commands,
     mut events: EventReader<ShootEvent>,
-    mut q_player: Query<&Transform, With<Player>>,
+    q_player: Query<&Transform, With<Player>>,
 ) {
-    let mut player_transform = q_player.single_mut();
+    let player_transform = q_player.single();
+    let mut bullet_transform = player_transform.clone();
+    bullet_transform.translation.z -= 1.;
+
     for event in events.iter() {
-        //spawn bullet? (atack speed?)
+        commands.spawn_bundle(create_bullet_bundle(
+            bullet_transform,
+            event.angle,
+            BULLET_SPEED,
+        ));
     }
 }

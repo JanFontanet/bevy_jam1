@@ -6,7 +6,6 @@ use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 
 pub struct ActionsPlugin;
-
 impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<MovementEvent>()
@@ -26,7 +25,7 @@ pub struct MovementEvent {
 }
 
 pub struct ShootEvent {
-    pub direction: Vec2,
+    pub angle: f32,
 }
 
 pub struct ActionsMap {
@@ -113,10 +112,8 @@ fn handle_shoot_input(
     if action_state.pressed(&Actions::Shoot) {
         let window = windows.get_primary().unwrap();
 
-        if let Some(direction) =
-            get_direction_between_transform_and_cursor(window, player_transform)
-        {
-            event_writer.send(ShootEvent { direction });
+        if let Some(angle) = get_angle_between_transform_and_cursor(window, player_transform) {
+            event_writer.send(ShootEvent { angle });
         }
     }
 }

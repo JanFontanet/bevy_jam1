@@ -1,8 +1,10 @@
 use crate::actions::*;
+use crate::bullet::*;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::*;
 use bevy::prelude::*;
+use bevy_prototype_lyon::plugin::ShapePlugin;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 pub enum GameState {
@@ -19,10 +21,12 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_state(GameState::Loading)
+            .add_plugin(ShapePlugin)
             .add_plugin(LoadingPlugin)
             .add_plugin(MenuPlugin)
             .add_plugin(PlayerPlugin)
             .add_plugin(ActionsPlugin)
+            .add_plugin(BulletPlugin)
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup));
 
         // DEBUG STUFF
