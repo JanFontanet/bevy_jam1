@@ -2,6 +2,7 @@ mod actions;
 mod bullet;
 mod collide;
 mod direction;
+mod enemy;
 mod game;
 mod loading;
 mod menu;

@@ -89,7 +89,12 @@ fn handle_movement_input(
     query: Query<&ActionState<Actions>, With<Player>>,
     mut event_writer: EventWriter<MovementEvent>,
 ) {
-    let action_state = query.single();
+    let action_state = query.get_single();
+    if let Err(err) = action_state {
+        eprintln!("{:?}", err);
+        return;
+    }
+    let action_state = action_state.unwrap();
     let mut direction = Direction::NEUTRAL;
 
     for input_direction in Actions::DIRECTIONS {
@@ -108,7 +113,12 @@ fn handle_shoot_input(
     query: Query<(&ActionState<Actions>, &Transform), With<Player>>,
     mut event_writer: EventWriter<ShootEvent>,
 ) {
-    let (action_state, player_transform) = query.single();
+    let player = query.get_single();
+    if let Err(err) = player {
+        eprintln!("{:?}", err);
+        return;
+    }
+    let (action_state, player_transform) = player.unwrap();
     if action_state.pressed(&Actions::Shoot) {
         let window = windows.get_primary().unwrap();
 

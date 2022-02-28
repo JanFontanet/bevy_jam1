@@ -1,6 +1,7 @@
 use crate::actions::*;
 use crate::bullet::*;
 use crate::collide::CollidePlugin;
+use crate::enemy::*;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::*;
@@ -29,6 +30,7 @@ impl Plugin for GamePlugin {
             .add_plugin(ActionsPlugin)
             .add_plugin(BulletPlugin)
             .add_plugin(CollidePlugin)
+            .add_plugin(EnemyPlugin)
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup));
 
         // DEBUG STUFF
@@ -40,6 +42,9 @@ impl Plugin for GamePlugin {
 
 #[derive(Component)]
 struct MainCamera;
+
+#[derive(Component)]
+pub struct Velocity(pub f32);
 
 fn setup(mut commands: Commands) {
     commands

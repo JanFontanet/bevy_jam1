@@ -58,9 +58,13 @@ pub(crate) fn create_bullet_bundle(
     }
 }
 
-fn update_bullets(mut q_bullet: Query<(&mut Transform, &BulletAttributes), With<Bullet>>) {
+fn update_bullets(
+    mut q_bullet: Query<(&mut Transform, &BulletAttributes), With<Bullet>>,
+    time: Res<Time>,
+) {
     for (mut transform, attributes) in q_bullet.iter_mut() {
         transform.translation += attributes.speed
+            * time.delta_seconds()
             * (Vec3::X * attributes.angle.cos() + Vec3::Y * attributes.angle.sin());
     }
 }
@@ -85,7 +89,7 @@ fn handle_bullet_leave_window_events(
     q_bullets: Query<(Entity, &Transform), With<Bullet>>,
 ) {
     for (ent, bullet) in q_bullets.iter() {
-        if bullet.translation.x.abs() > 4000. || bullet.translation.y.abs() > 3000. {
+        if bullet.translation.x.abs() > 2000. || bullet.translation.y.abs() > 1500. {
             commands.entity(ent).despawn();
         }
     }
