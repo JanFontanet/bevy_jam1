@@ -69,21 +69,6 @@ fn update_bullets(
     }
 }
 
-// fn handle_bullet_leave_window_events(
-//     mut commands: Commands,
-//     mut events: EventReader<EntityLeaveWindow>,
-//     q_bullets: Query<Entity, With<Bullet>>,
-// ) {
-//     for entity in q_bullets.iter() {
-//         for event in events.iter() {
-//             if event.entity == entity {
-//                 eprintln!("Bullet {:?} left window", entity);
-//                 commands.entity(entity).despawn();
-//             }
-//         }
-//     }
-// }
-
 fn handle_bullet_leave_window_events(
     mut commands: Commands,
     q_bullets: Query<(Entity, &Transform), With<Bullet>>,

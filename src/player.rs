@@ -1,7 +1,7 @@
 use crate::actions::{Actions, ActionsMap, MovementEvent, ShootEvent};
 use crate::bullet::create_bullet_bundle;
 use crate::collide::{Collideable, Collider, DetectLeave, EntityLeaveWindow};
-use crate::game::GameState;
+use crate::game::{GameState, Speed, BASE_RADIUS, BASE_SPEED};
 use crate::utils::*;
 use bevy::prelude::*;
 use bevy_prototype_lyon::entity::ShapeBundle;
@@ -42,7 +42,7 @@ pub struct PlayerBundle {
 fn spawn_player(mut commands: Commands, actions_map: Res<ActionsMap>) {
     let shape = shapes::RegularPolygon {
         sides: 3,
-        feature: shapes::RegularPolygonFeature::Radius(20.0),
+        feature: shapes::RegularPolygonFeature::Radius(BASE_RADIUS),
         ..shapes::RegularPolygon::default()
     };
 
@@ -65,8 +65,11 @@ fn spawn_player(mut commands: Commands, actions_map: Res<ActionsMap>) {
                 input_map: actions_map.input_map.clone(),
             },
         })
-        .insert(Collideable { radius: 20.0 })
-        .insert(DetectLeave);
+        .insert(Collideable {
+            radius: BASE_RADIUS,
+        })
+        .insert(DetectLeave)
+        .insert(Speed(BASE_SPEED));
 }
 
 fn cursor_system(windows: Res<Windows>, mut q_player: Query<&mut Transform, With<Player>>) {
@@ -85,17 +88,19 @@ fn cursor_system(windows: Res<Windows>, mut q_player: Query<&mut Transform, With
 
 fn handle_movement_events(
     mut events: EventReader<MovementEvent>,
-    mut q_player: Query<&mut Transform, With<Player>>,
+    mut q_player: Query<(&mut Transform, &Speed), With<Player>>,
+    time: Res<Time>,
 ) {
-    let player_transform = q_player.get_single_mut();
-    if let Err(err) = player_transform {
+    let player = q_player.get_single_mut();
+    if let Err(err) = player {
         eprintln!("{:?}", err);
         return;
     }
-    let mut player_transform = player_transform.unwrap();
+    let (mut player_transform, speed) = player.unwrap();
 
     for event in events.iter() {
-        player_transform.translation += Vec3::from(event.direction);
+        player_transform.translation +=
+            Vec3::from(event.direction) * time.delta_seconds() * speed.0;
     }
 }
 

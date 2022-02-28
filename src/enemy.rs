@@ -18,7 +18,7 @@ struct Enemy;
 fn spawn_enemy(mut commands: Commands) {
     let shape = shapes::RegularPolygon {
         sides: 5,
-        feature: shapes::RegularPolygonFeature::Radius(20.0),
+        feature: shapes::RegularPolygonFeature::Radius(BASE_RADIUS),
         ..shapes::RegularPolygon::default()
     };
 
@@ -35,14 +35,13 @@ fn spawn_enemy(mut commands: Commands) {
             },
         ))
         .insert(Enemy)
-        .insert(Velocity(10.0))
-        .insert(Collideable { radius: 20.0 });
+        .insert(Speed(BASE_SPEED))
+        .insert(Collideable {
+            radius: BASE_RADIUS,
+        });
 }
 
-fn move_enemy(
-    time: Res<Time>,
-    mut enemy_transform: Query<(&mut Transform, &Velocity), With<Enemy>>,
-) {
+fn move_enemy(time: Res<Time>, mut enemy_transform: Query<(&mut Transform, &Speed), With<Enemy>>) {
     for (mut transform, velocity) in enemy_transform.iter_mut() {
         transform.translation.x += time.delta_seconds() * velocity.0;
     }

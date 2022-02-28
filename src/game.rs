@@ -32,11 +32,6 @@ impl Plugin for GamePlugin {
             .add_plugin(CollidePlugin)
             .add_plugin(EnemyPlugin)
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup));
-
-        // DEBUG STUFF
-        //.add_plugin(LogDiagnosticsPlugin::default())
-        //.add_plugin(FrameTimeDiagnosticsPlugin::default())
-        // END DEBUG STUFF
     }
 }
 
@@ -44,7 +39,10 @@ impl Plugin for GamePlugin {
 struct MainCamera;
 
 #[derive(Component)]
-pub struct Velocity(pub f32);
+pub struct Speed(pub f32);
+
+pub const BASE_SPEED: f32 = 50.;
+pub const BASE_RADIUS: f32 = 20.;
 
 fn setup(mut commands: Commands) {
     commands
