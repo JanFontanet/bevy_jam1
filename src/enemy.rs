@@ -1,7 +1,11 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
-use crate::{collide::Collideable, game::*};
+use crate::{
+    bullet::Bullet,
+    collide::{Collideable, DetectLeave},
+    game::*,
+};
 
 pub struct EnemyPlugin;
 
@@ -38,11 +42,30 @@ fn spawn_enemy(mut commands: Commands) {
         .insert(Speed(BASE_SPEED))
         .insert(Collideable {
             radius: BASE_RADIUS,
-        });
+        })
+        .insert(DetectLeave);
 }
 
-fn move_enemy(time: Res<Time>, mut enemy_transform: Query<(&mut Transform, &Speed), With<Enemy>>) {
-    for (mut transform, velocity) in enemy_transform.iter_mut() {
-        transform.translation.x += time.delta_seconds() * velocity.0;
+fn move_enemy(
+    time: Res<Time>,
+    mut enemy_query: Query<(&mut Transform, &Speed), With<Enemy>>,
+    bullets_query: Query<&Transform, (With<Bullet>, Without<Enemy>)>,
+) {
+    if let Ok((mut transform, speed)) = enemy_query.get_single_mut() {
+        let mut closest_bullet_transform: Option<&Transform> = None;
+        let mut closest_distance: f32 = std::f32::MAX;
+        for bullet_transform in bullets_query.iter() {
+            let distance = bullet_transform.translation.distance(transform.translation);
+            if distance < closest_distance {
+                closest_distance = distance;
+                closest_bullet_transform = Some(bullet_transform);
+            }
+        }
+        if let Some(bullet) = closest_bullet_transform {
+            let bullet_direction = bullet.translation.truncate().normalize();
+            let movement_direction = Vec3::new(bullet_direction.y, -bullet_direction.x, 0.0);
+            let magnitude = time.delta_seconds() * speed.0;
+            transform.translation += magnitude * movement_direction;
+        }
     }
 }

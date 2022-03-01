@@ -8,7 +8,8 @@ impl Plugin for CollidePlugin {
         app.add_event::<EntityLeaveWindow>().add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_system(collide_system)
-                .with_system(detect_entity_leaving),
+                .with_system(detect_entity_leaving)
+                .with_system(handle_leave_window_events.after("movement")),
         );
     }
 }
@@ -85,6 +86,20 @@ fn detect_entity_leaving(
                 last_x: x,
                 last_y: -height / 2.,
             });
+        }
+    }
+}
+
+fn handle_leave_window_events(
+    mut events: EventReader<EntityLeaveWindow>,
+    mut query: Query<(Entity, &mut Transform)>,
+) {
+    for (entity, mut transform) in query.iter_mut() {
+        for event in events.iter() {
+            if event.entity == entity {
+                transform.translation.x = event.last_x;
+                transform.translation.y = event.last_y;
+            }
         }
     }
 }

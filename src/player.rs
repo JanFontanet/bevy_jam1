@@ -1,6 +1,6 @@
 use crate::actions::{Actions, ActionsMap, MovementEvent, ShootEvent};
 use crate::bullet::create_bullet_bundle;
-use crate::collide::{Collideable, Collider, DetectLeave, EntityLeaveWindow};
+use crate::collide::{Collideable, Collider, DetectLeave};
 use crate::game::{GameState, Speed, BASE_RADIUS, BASE_SPEED};
 use crate::utils::*;
 use bevy::prelude::*;
@@ -21,8 +21,7 @@ impl Plugin for PlayerPlugin {
                 SystemSet::on_update(GameState::Playing)
                     .with_system(cursor_system)
                     .with_system(handle_movement_events.after("input").label("movement"))
-                    .with_system(handle_shoot_events.after("input").label("action"))
-                    .with_system(handle_player_leave_window_events.after("movement")),
+                    .with_system(handle_shoot_events.after("input").label("action")),
             );
     }
 }
@@ -126,23 +125,5 @@ fn handle_shoot_events(
                 BULLET_SPEED,
             ))
             .insert(Collider { radius: 8.0 });
-    }
-}
-
-fn handle_player_leave_window_events(
-    mut events: EventReader<EntityLeaveWindow>,
-    mut q_player: Query<(Entity, &mut Transform), With<Player>>,
-) {
-    let player = q_player.get_single_mut();
-    if let Err(err) = player {
-        eprintln!("{:?}", err);
-        return;
-    }
-    let (entity, mut player_transform) = player.unwrap();
-    for event in events.iter() {
-        if event.entity == entity {
-            player_transform.translation.x = event.last_x;
-            player_transform.translation.y = event.last_y;
-        }
     }
 }
