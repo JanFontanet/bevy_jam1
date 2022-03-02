@@ -92,7 +92,7 @@ fn detect_entity_leaving(
 
 fn handle_leave_window_events(
     mut events: EventReader<EntityLeaveWindow>,
-    mut query: Query<(Entity, &mut Transform)>,
+    mut query: Query<(Entity, &mut Transform), With<DetectLeave>>,
 ) {
     for (entity, mut transform) in query.iter_mut() {
         for event in events.iter() {

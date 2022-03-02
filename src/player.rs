@@ -55,7 +55,7 @@ fn spawn_player(mut commands: Commands, actions_map: Res<ActionsMap>) {
                     outline_mode: StrokeMode::new(Color::BLACK, 0.0),
                 },
                 Transform {
-                    translation: Vec3::new(-100.0, 0.0, 10.0),
+                    translation: Vec3::new(-350.0, 0.0, 10.0),
                     ..Default::default()
                 },
             ),

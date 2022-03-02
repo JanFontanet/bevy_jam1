@@ -5,6 +5,7 @@ use crate::enemy::*;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::*;
+// use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_prototype_lyon::plugin::ShapePlugin;
 
@@ -32,6 +33,8 @@ impl Plugin for GamePlugin {
             .add_plugin(CollidePlugin)
             .add_plugin(EnemyPlugin)
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup));
+        // .add_plugin(LogDiagnosticsPlugin::default())
+        // .add_plugin(FrameTimeDiagnosticsPlugin::default());
     }
 }
 
