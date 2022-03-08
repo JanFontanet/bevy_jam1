@@ -10,12 +10,14 @@ impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<MovementEvent>()
             .add_event::<ShootEvent>()
+            .add_event::<DashEvent>()
             .init_resource::<ActionsMap>()
             .add_plugin(InputManagerPlugin::<Actions>::default())
             .add_system_set(
                 SystemSet::on_update(GameState::Playing)
                     .with_system(handle_movement_input.label("input"))
-                    .with_system(handle_shoot_input.label("input")),
+                    .with_system(handle_shoot_input.label("input"))
+                    .with_system(handle_dash_input.label("input")),
             );
     }
 }
@@ -27,6 +29,8 @@ pub struct MovementEvent {
 pub struct ShootEvent {
     pub angle: f32,
 }
+
+pub struct DashEvent;
 
 pub struct ActionsMap {
     pub input_map: InputMap<Actions>,
@@ -49,7 +53,7 @@ pub enum Actions {
     Right,
     // Abilities
     Shoot,
-    // Dash,
+    Dash,
 }
 
 impl Actions {
@@ -80,6 +84,7 @@ impl Actions {
 
         // Abilities
         input_map.insert(Shoot, MouseButton::Left);
+        input_map.insert(Dash, KeyCode::Space);
 
         input_map
     }
@@ -125,5 +130,20 @@ fn handle_shoot_input(
         if let Some(angle) = get_angle_between_transform_and_cursor(window, player_transform) {
             event_writer.send(ShootEvent { angle });
         }
+    }
+}
+
+fn handle_dash_input(
+    query: Query<&ActionState<Actions>, With<Player>>,
+    mut event_writer: EventWriter<DashEvent>,
+) {
+    let action_state = query.get_single();
+    if let Err(err) = action_state {
+        eprintln!("{:?}", err);
+        return;
+    }
+    let action_state = action_state.unwrap();
+    if action_state.pressed(&Actions::Dash) {
+        event_writer.send(DashEvent);
     }
 }

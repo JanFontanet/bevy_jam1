@@ -1,9 +1,9 @@
 use crate::abilities::{Ability, Cooldown};
-use crate::actions::{Actions, ActionsMap, MovementEvent, ShootEvent};
+use crate::actions::*;
 use crate::bullet::create_bullet_bundle;
 use crate::collide::{Collideable, Collider, DetectLeave};
 use crate::game::{GameState, Speed, BASE_RADIUS, BASE_SPEED, BULLET_SPEED};
-use crate::shoot::{ShootAbility, ShootAbilityBundle};
+use crate::game_abilities::*;
 use crate::utils::*;
 use bevy::prelude::*;
 use bevy_prototype_lyon::entity::ShapeBundle;
@@ -23,6 +23,7 @@ impl Plugin for PlayerPlugin {
                     .with_system(cursor_system)
                     .with_system(handle_movement_events.after("input").label("movement"))
                     .with_system(handle_shoot_events.after("input").label("action"))
+                    .with_system(handle_dash_events.after("input").label("action"))
                     .with_system(go_to_menu_again),
             );
     }
@@ -84,7 +85,17 @@ fn spawn_player(mut commands: Commands, actions_map: Res<ActionsMap>) {
         .insert(Ability)
         .id();
 
-    commands.entity(player).push_children(&[shoot_ability]);
+    let dash_ability = commands
+        .spawn_bundle(DashAbilityBundle {
+            marker: DashAbility,
+            cooldown: Cooldown::new(10.),
+        })
+        .insert(Ability)
+        .id();
+
+    commands
+        .entity(player)
+        .push_children(&[shoot_ability, dash_ability]);
 }
 
 fn cursor_system(windows: Res<Windows>, mut q_player: Query<&mut Transform, With<Player>>) {
@@ -150,6 +161,35 @@ fn handle_shoot_events(
             .insert(Collider { radius: 8.0 })
             .insert(PlayerBullet);
         cd.start();
+    }
+}
+
+fn handle_dash_events(
+    windows: Res<Windows>,
+    mut events: EventReader<DashEvent>,
+    mut q_player: Query<(&mut Transform, &Children), With<Player>>,
+    mut q_ability: Query<&mut Cooldown, With<DashAbility>>,
+) {
+    let window = windows.get_primary().unwrap();
+    let player_transform = q_player.get_single_mut();
+    if let Err(err) = player_transform {
+        eprintln!("{:?}", err);
+        return;
+    }
+    let (mut player_transform, children) = player_transform.unwrap();
+
+    for _ in events.iter() {
+        let mut cd = q_ability.get_mut(children[1]).unwrap();
+        if !cd.finished() {
+            return;
+        }
+        if let Some(angle) = get_angle_between_transform_and_cursor(window, &player_transform) {
+            let magnitude: f32 = 150.;
+            player_transform.translation.x += angle.cos() * magnitude;
+            player_transform.translation.y += angle.sin() * magnitude;
+
+            cd.start();
+        }
     }
 }
 

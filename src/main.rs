@@ -5,10 +5,10 @@ mod collide;
 mod direction;
 mod enemy;
 mod game;
+mod game_abilities;
 mod loading;
 mod menu;
 mod player;
-mod shoot;
 mod utils;
 
 use bevy::{prelude::*, window::WindowMode};

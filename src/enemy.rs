@@ -6,8 +6,8 @@ use crate::{
     bullet::{create_bullet_bundle, BulletAttributes},
     collide::{Collideable, Collider, DetectLeave},
     game::*,
+    game_abilities::*,
     player::{Player, PlayerBullet},
-    shoot::*,
 };
 
 pub struct EnemyPlugin;
