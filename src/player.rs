@@ -1,7 +1,9 @@
+use crate::abilities::{Ability, Cooldown};
 use crate::actions::{Actions, ActionsMap, MovementEvent, ShootEvent};
 use crate::bullet::create_bullet_bundle;
 use crate::collide::{Collideable, Collider, DetectLeave};
-use crate::game::{GameState, Speed, BASE_RADIUS, BASE_SPEED};
+use crate::game::{GameState, Speed, BASE_RADIUS, BASE_SPEED, BULLET_SPEED};
+use crate::shoot::{ShootAbility, ShootAbilityBundle};
 use crate::utils::*;
 use bevy::prelude::*;
 use bevy_prototype_lyon::entity::ShapeBundle;
@@ -10,7 +12,6 @@ use leafwing_input_manager::prelude::*;
 use std::f32::consts::PI;
 
 const PLAYER_BASE_ANGLE: f32 = -PI / 2.0;
-const BULLET_SPEED: f32 = 200.0; // NOTE: points per seccond
 
 pub struct PlayerPlugin;
 
@@ -21,13 +22,17 @@ impl Plugin for PlayerPlugin {
                 SystemSet::on_update(GameState::Playing)
                     .with_system(cursor_system)
                     .with_system(handle_movement_events.after("input").label("movement"))
-                    .with_system(handle_shoot_events.after("input").label("action")),
+                    .with_system(handle_shoot_events.after("input").label("action"))
+                    .with_system(go_to_menu_again),
             );
     }
 }
 
 #[derive(Component)]
 pub struct Player;
+
+#[derive(Component)]
+pub struct PlayerBullet;
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
@@ -45,7 +50,7 @@ fn spawn_player(mut commands: Commands, actions_map: Res<ActionsMap>) {
         ..shapes::RegularPolygon::default()
     };
 
-    commands
+    let player = commands
         .spawn_bundle(PlayerBundle {
             player: Player,
             shape: GeometryBuilder::build_as(
@@ -68,7 +73,18 @@ fn spawn_player(mut commands: Commands, actions_map: Res<ActionsMap>) {
             radius: BASE_RADIUS,
         })
         .insert(DetectLeave)
-        .insert(Speed(BASE_SPEED));
+        .insert(Speed(BASE_SPEED))
+        .id();
+
+    let shoot_ability = commands
+        .spawn_bundle(ShootAbilityBundle {
+            marker: ShootAbility,
+            cooldown: Cooldown::new(0.3),
+        })
+        .insert(Ability)
+        .id();
+
+    commands.entity(player).push_children(&[shoot_ability]);
 }
 
 fn cursor_system(windows: Res<Windows>, mut q_player: Query<&mut Transform, With<Player>>) {
@@ -106,24 +122,39 @@ fn handle_movement_events(
 fn handle_shoot_events(
     mut commands: Commands,
     mut events: EventReader<ShootEvent>,
-    q_player: Query<&Transform, With<Player>>,
+    q_player: Query<(&Transform, &Children), With<Player>>,
+    mut q_ability: Query<&mut Cooldown, With<ShootAbility>>,
 ) {
     let player_transform = q_player.get_single();
     if let Err(err) = player_transform {
         eprintln!("{:?}", err);
         return;
     }
-    let player_transform = player_transform.unwrap();
+    let (player_transform, children) = player_transform.unwrap();
+
     let mut bullet_transform = player_transform.clone();
     bullet_transform.translation.z -= 1.;
 
     for event in events.iter() {
+        let mut cd = q_ability.get_mut(children[0]).unwrap();
+        if !cd.finished() {
+            return;
+        }
         commands
             .spawn_bundle(create_bullet_bundle(
                 bullet_transform,
                 event.angle,
                 BULLET_SPEED,
+                Color::ORANGE,
             ))
-            .insert(Collider { radius: 8.0 });
+            .insert(Collider { radius: 8.0 })
+            .insert(PlayerBullet);
+        cd.start();
+    }
+}
+
+fn go_to_menu_again(mut state: ResMut<State<GameState>>, q_player: Query<&Player>) {
+    if q_player.is_empty() {
+        state.set(GameState::Menu).unwrap();
     }
 }

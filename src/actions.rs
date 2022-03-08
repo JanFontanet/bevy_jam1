@@ -49,7 +49,7 @@ pub enum Actions {
     Right,
     // Abilities
     Shoot,
-    Dash,
+    // Dash,
 }
 
 impl Actions {

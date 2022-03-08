@@ -36,6 +36,7 @@ pub(crate) fn create_bullet_bundle(
     mut transform: Transform,
     angle: f32,
     speed: f32,
+    color: Color,
 ) -> BulletBundle {
     let shape = shapes::Circle {
         radius: 8.,
@@ -50,7 +51,7 @@ pub(crate) fn create_bullet_bundle(
         shape: GeometryBuilder::build_as(
             &shape,
             DrawMode::Outlined {
-                fill_mode: FillMode::color(Color::ORANGE),
+                fill_mode: FillMode::color(color),
                 outline_mode: StrokeMode::new(Color::BLACK, 0.0),
             },
             transform,

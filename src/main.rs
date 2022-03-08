@@ -1,3 +1,4 @@
+mod abilities;
 mod actions;
 mod bullet;
 mod collide;
@@ -7,9 +8,9 @@ mod game;
 mod loading;
 mod menu;
 mod player;
+mod shoot;
 mod utils;
 
-//use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::{prelude::*, window::WindowMode};
 use game::GamePlugin;
 

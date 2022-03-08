@@ -1,3 +1,4 @@
+use crate::abilities::AbilitiesPlugin;
 use crate::actions::*;
 use crate::bullet::*;
 use crate::collide::CollidePlugin;
@@ -32,7 +33,9 @@ impl Plugin for GamePlugin {
             .add_plugin(BulletPlugin)
             .add_plugin(CollidePlugin)
             .add_plugin(EnemyPlugin)
-            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup));
+            .add_plugin(AbilitiesPlugin)
+            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup))
+            .add_system_set(SystemSet::on_exit(GameState::Playing).with_system(destroy_entities));
         // .add_plugin(LogDiagnosticsPlugin::default())
         // .add_plugin(FrameTimeDiagnosticsPlugin::default());
     }
@@ -44,11 +47,18 @@ struct MainCamera;
 #[derive(Component)]
 pub struct Speed(pub f32);
 
-pub const BASE_SPEED: f32 = 50.;
+pub const BASE_SPEED: f32 = 80.;
 pub const BASE_RADIUS: f32 = 20.;
+pub const BULLET_SPEED: f32 = 250.0; // NOTE: points per seccond
 
 fn setup(mut commands: Commands) {
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(MainCamera);
+}
+
+fn destroy_entities(mut commands: Commands, query: Query<Entity>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
 }
